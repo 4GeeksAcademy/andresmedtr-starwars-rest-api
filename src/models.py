@@ -11,7 +11,7 @@ class User(db.Model):
     username = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(80), unique=False, nullable=False)
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
-    favorites_id = relationship("Favorites", lazy=True)
+    favorites = relationship("Favorites", lazy=True, back_populates='user')
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -19,14 +19,17 @@ class User(db.Model):
     def serialize(self):
         return {
             "id": self.id,
-            "username": self.username
+            "username": self.username,
+            "favorites": list(map(lambda x: x.serialize(), self.favorites))
             # do not serialize the password, its a security breach
         }
     
 class Favorites(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    favorite_id = db.Column(db.Integer, ForeignKey("user.id"), unique=True, nullable=True)
-    name = db.Column(db.String(250), unique=True, nullable=False)
+    user_id = db.Column(db.Integer, ForeignKey("user.id"), unique=True, nullable=True)
+    user = db.relationship('User', back_populates='favorites', foreign_keys=[user_id])
+    planet_id = db.Column(db.Integer, ForeignKey("planet.id"), unique=True, nullable=True)
+    character_id = db.Column(db.Integer, ForeignKey("character.id"), unique=True, nullable=True)
     favorite_planets= relationship('Planet', backref="user", uselist=False)
     favorite_character= relationship('Character', backref="user", uselist=False)
 
@@ -37,7 +40,9 @@ class Favorites(db.Model):
     def serialize(self):
         return {
             "id": self.id,
-            "name": self.name
+            "user_id": self.user_id,
+            "planet_id": self.planet_id,
+            "character_id": self.character_id
             # do not serialize the password, its a security breach
         }
     
@@ -47,7 +52,7 @@ class Favorites(db.Model):
 class Character(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(250), unique=True, nullable=False)
-    character_id = db.Column(Integer, ForeignKey("favorites.id"))
+    # character_id = db.Column(Integer, ForeignKey("favorites.id"))
 
     def __repr__(self):
         return f'<Character {self.name}>'
@@ -64,7 +69,7 @@ class Character(db.Model):
 class Planet(db.Model):
     id = db.Column(db.Integer, primary_key= True)
     name = db.Column(db.String(100), unique=True, nullable=False)
-    planet_id = db.Column(db.Integer, ForeignKey("favorites.id"))
+    # planet_id = db.Column(db.Integer, ForeignKey("favorites.id"))
   
 
     def __repr__(self):

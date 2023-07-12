@@ -60,6 +60,7 @@ def get_single_user(user_id):
     user_data = {
         'id': user1.id,
         'username': user1.username,
+        'favorites': list(map(lambda x: x.serialize(), user1.favorites))
     }
 
     return jsonify(user_data), 200
@@ -104,7 +105,8 @@ def get_single_character(character_id):
 
     character_data = {
         'id': character.id,
-        'name': character.name,
+        'name': character.name
+        
     }
 
     return jsonify(character_data), 200
@@ -134,21 +136,73 @@ def get_single_planet(planet_id):
 
 # /favorite/planet/<int:planet_id>
 # POST A FAVORITE PLANET ON AN USER
-@app.route('/favorite/planet/<int:planet_id>', methods=['POST'])
-def add_favorite_planet(planet_id):
+@app.route('/favorite/planet', methods=['POST'])
+def add_favorite_planet():
 
-    # Get the current user (you can implement the logic to get the current user based on your authentication system)
-    current_user = User.query.get(current_user.id)  # Replace with your logic to get the current user
+    request_body = request.get_json()
+    user_id = request_body["user_id"]
+    planet_id = request_body["planet_id"]
 
-    # Create a new favorite planet
-    new_favorite_planet = Planet(name='Planet Name', planet_id=planet_id)
-    current_user.favorites_id.favorite_planets = new_favorite_planet
 
-    # Save the changes to the database
+    new_favorite_planet = Favorites(user_id=user_id, planet_id=planet_id)
+
     db.session.add(new_favorite_planet)
     db.session.commit()
 
     return 'Favorite planet added successfully'
+
+
+# POST A FAVORITE CHARACTER ON AN USER
+@app.route('/favorite/character', methods=['POST'])
+def add_favorite_character():
+
+    request_body = request.get_json()
+    user_id = request_body["user_id"]
+    character_id = request_body["character_id"]
+
+
+    new_favorite_character = Favorites(user_id=user_id, character_id=character_id)
+
+    db.session.add(new_favorite_character)
+    db.session.commit()
+
+    return 'Favorite character added successfully'
+
+
+# ###################################################
+
+
+# /favorite/planet/<int:planet_id>
+# DELETE A FAVORITE PLANET ON AN USER
+@app.route('/favorite/planet', methods=['DELETE'])
+def delete_favorite_planet():
+
+    request_body = request.get_json()
+    user_id = request_body["user_id"]
+    planet_id = request_body["planet_id"]
+
+    favorite = Favorites.query.filter_by(user_id=user_id, planet_id=planet_id).delete()
+
+    db.session.commit()
+
+    return "Planet deleted successfully", 200
+
+# /favorite/planet/<int:planet_id>
+# DELETE A FAVORITE PLANET ON AN USER
+@app.route('/favorite/character', methods=['DELETE'])
+def delete_favorite_character():
+
+    request_body = request.get_json()
+    user_id = request_body["user_id"]
+    character_id = request_body["character_id"]
+
+    favorite = Favorites.query.filter_by(user_id=user_id, character_id=character_id).delete()
+
+    db.session.commit()
+
+    return "Character deleted successfully", 200
+  
+
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
